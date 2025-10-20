@@ -36,17 +36,19 @@ end
 
   -- Determines what fuel is loaded into fuel rods. Prompts user input if ambiguity exists.
 function pollControlRods()
+  cacheComponents()
+
   co = coroutine.create(
     function()
       for col, rowArr in pairs(fuelRods) do
         for row, fuelType in pairs(rowArr) do
           temporaryType = "I'm illegal!!!"
-          maxHeat = console.getColumnData(col, row).maxHeat
+          maxHeat = console.getColumnData(col, row).coreMaxTemp
           location = localCoordsToLocation(col, row)
           
           nameByTemp = fuel.findByTemp(maxHeat)
 
-          if nameByTemp == nil or fuelType == "none" or maxHeat == nil then
+          if maxHeat == nil or maxHeat == 0 or nameByTemp == nil then
             temporaryType = coroutine.yield("none", location)
           elseif #nameByTemp > 1 then
             temporaryType = coroutine.yield("ambiguous", location)
@@ -63,8 +65,6 @@ function pollControlRods()
       end
     end
   )
-
-  cacheComponents()
 
   executed, result, result2 = coroutine.resume(co)
   if not executed then 
