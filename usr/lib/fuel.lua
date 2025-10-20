@@ -8,10 +8,10 @@ local fuel = {}
 function fuel.findByTemp(maxHeat)
   toReturn = {}
   
-  for k, v in fuel do
+  for k, v in pairs(fuel) do
     if k ~= "findByTemp" and k ~= "isValid" and v == maxHeat then
-	    toReturn.k = v
-	  end
+    toReturn.k = v
+    end
   end
   
   return toReturn
@@ -20,8 +20,8 @@ end
 function fuel.isValid(name)
   if name == "findByTemp" or name == "isValid" then return false end
 
-  for k, v in fuel do
-    if k == name then return true 
+  for k, v in pairs(fuel) do
+    if k == name then return true end
   end
 
   return false
@@ -36,7 +36,7 @@ local function createFuel(name, maxHeat, fluxCurve, depletionCurve, selfRate, re
   fuelData.reactivity = reactivity
   fuelData.yield = yield
     -- Takes the fuel depletion and desired flux as an argument. Returns the average control rod extraction 
-	--  necessary (in a 4 reflector setup) to produce the passed flux.
+    --  necessary (in a 4 reflector setup) to produce the passed flux.
   function fuelData.calculate(d, f)
     return f / (4 * fuelData.fluxCurve((f + fuelData.selfRate) * fuelData.depletionCurve(d)))
   end

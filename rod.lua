@@ -1,11 +1,12 @@
 local component = require("component")
 local fuel = require("fuel")
+local prompter = require("prompter")
 
 local console = component.rbmk_console
 -- local crane = component.rbmk_crane
 
 local abLookup = {
-  0="A", 1="B", 2="C", 3="D", 4="E", 5="F", 6="G", 7="H", 8="I", 9="J", 10="K", 11="L", 12="M", 13="N", 14="O"
+  [0]="A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O"
 }
 
   -- Two-dimensional array whose non-nil elements are strings indicating the inserted fuel type.
@@ -45,7 +46,7 @@ function pollControlRods()
           
           nameByTemp = fuel.findByTemp(maxHeat)
 
-          if fuelType == "none" or maxHeat == nil then
+          if nameByTemp == nil or fuelType == "none" or maxHeat == nil then
             temporaryType = coroutine.yield("none", location)
           elseif #nameByTemp > 1 then
             temporaryType = coroutine.yield("ambiguous", location)
@@ -65,7 +66,7 @@ function pollControlRods()
 
   executed, result, result2 = coroutine.resume(co)
   if not executed then 
-    print("Unable to poll rods - " .. result)
+    print("Unable to poll rods on initial coroutine loop - " .. result)
     return false
   end
 
@@ -88,6 +89,7 @@ function pollControlRods()
   end
 
   print("Fuel rod polling completed successfully.")
+  printComponents()
   return true
 end
 
@@ -103,5 +105,5 @@ function localCoordsToLocation(x, z)
   return abLookup[x] .. z
 end
 
+cacheComponents()
 pollControlRods()
-printComponents()
