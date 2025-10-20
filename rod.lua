@@ -98,8 +98,10 @@ end
 function printComponents()
   print("ROD DUMP:")
   print()
-  for k, v in pairs(fuelRods) do
-    print(k .. " - " .. v)
+  for k1, v1 in pairs(fuelRods) do
+    for k2, v2 in pairs(v1) do
+      print(localCoordsToLocation(k1, k2) .. " - " .. v2)
+    end
   end
 end
 
