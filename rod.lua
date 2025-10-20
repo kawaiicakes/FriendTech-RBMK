@@ -55,14 +55,16 @@ function pollControlRods()
           end
 
           while not fuel.isValid(temporaryType) do
-            temporaryType = coroutine.yield("illegal", tempType)
+            temporaryType = coroutine.yield("illegal", temporaryType)
           end
 
-          fuelRods[col][row] = tempType
+          fuelRods[col][row] = temporaryType
         end
       end
     end
   )
+
+  cacheComponents()
 
   executed, result, result2 = coroutine.resume(co)
   if not executed then 
@@ -105,5 +107,4 @@ function localCoordsToLocation(x, z)
   return abLookup[x] .. z
 end
 
-cacheComponents()
 pollControlRods()
