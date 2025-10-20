@@ -1,3 +1,4 @@
+  -- Simple lookup table returning depletion curves for the fuels
 local depletion = {}
 
 function depletion.linear(d)

@@ -1,7 +1,7 @@
 local flux = require("flux")
 local depletion = require("depletion")
 
-  -- Module for static properties regarding fuel rods
+  -- Module for static properties regarding fuel rods.
 local fuel = {}
 
   -- Returns the fuel(s) with the passed meltdown temp.
@@ -9,14 +9,23 @@ function fuel.findByTemp(maxHeat)
   toReturn = {}
   
   for k, v in fuel do
-    if k ~= "findByTemp" then
-	  toReturn.k = v
-	end
+    if k ~= "findByTemp" and k ~= "isValid" and v == maxHeat then
+	    toReturn.k = v
+	  end
   end
   
   return toReturn
 end
 
+function fuel.isValid(name)
+  if name == "findByTemp" or name == "isValid" then return false end
+
+  for k, v in fuel do
+    if k == name then return true 
+  end
+
+  return false
+end
   -- Helper function intended for use in this file ONLY
 local function createFuel(name, maxHeat, fluxCurve, depletionCurve, selfRate, reactivity, yield)
   fuelData = {}
@@ -35,13 +44,6 @@ local function createFuel(name, maxHeat, fluxCurve, depletionCurve, selfRate, re
   fuel.name = fuelData
 end
 
-createFuel(
-  "flashlead",
-  2050.0,
-  flux.arch,
-  depletion.linear,
-  50,
-  40
-)
+createFuel("flashlead", 2050.0, flux.arch, depletion.linear, 50, 40)
 
 return fuel

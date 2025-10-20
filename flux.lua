@@ -1,3 +1,4 @@
+  -- Simple lookup table returning outflux curves for the fuels
 local flux = {}
 
 function flux.passive(x, reactivity)
