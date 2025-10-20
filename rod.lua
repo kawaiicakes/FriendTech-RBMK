@@ -53,7 +53,7 @@ function pollControlRods()
           elseif #nameByTemp > 1 then
             temporaryType = coroutine.yield("ambiguous", location)
           else
-            temporaryType = nameByTemp
+            temporaryType = nameByTemp[1]
           end
 
           while not fuel.isValid(temporaryType) do

@@ -11,7 +11,9 @@ function fuel.findByTemp(maxHeat)
   toReturn = {}
   
   for k, v in pairs(fuel.types) do
-    toReturn.k = v
+    if v.maxHeat == maxHeat then
+      table.insert(toReturn, k)
+    end
   end
   
   return toReturn
