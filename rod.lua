@@ -110,3 +110,90 @@ function localCoordsToLocation(x, z)
 end
 
 pollControlRods()
+
+  -- Ad-hoc implementation here and below just so we can get the reactor online, WE NEED POWER NOW
+
+print("Initiating automatic control rod protocols")
+
+local scrammed = false
+local maxTemp = 1845.00
+local maxColumnTemp = 1350
+
+function executeMainLoop()
+  rodReader = coroutine.create(
+    function()
+      while not scrammed do
+        locationColTemp = ""
+        locationTemp = ""
+        locationDep = ""
+        highestColTemp = 20
+        highestTemp = 20
+        lowestDepletion = 0
+
+        for k1, v1 in pairs(fuelRods) do
+          for k2, v2 in pairs(v1) do
+            data = console.getColumnData(k1, k2)
+
+            if data.coreSkinTemp >= maxTemp or data.hullTemp >= maxColumnTemp then
+              coroutine.yield(localCoordsToLocation(k1, k2), true, data.coreSkinTemp, data.hullTemp)
+            end
+
+            if data.coreSkinTemp > highestTemp then
+              highestTemp = data.coreSkinTemp
+              locationTemp = localCoordsToLocation(k1, k2)
+            end
+
+            if data.coreSkinTemp > highestTemp then
+              highestTemp = data.coreSkinTemp
+              locationTemp = localCoordsToLocation(k1, k2)
+            end
+
+            if data.enrichment < lowestDepletion then 
+              lowestDepletion = data.enrichment 
+              locationDep = localCoordsToLocation(k1, k2)
+            end
+          end
+        end
+
+        coroutine.yield(locationColTemp, highestColTemp, locationTemp, highestTemp, locationDep, lowestDepletion)
+      end
+    end
+  )
+
+  rodController = coroutine.create(
+    function(f, d)
+     while not scrammed do
+       fuelData = fuel.types.flashlead
+       newLevel = f / (4 * fuelData.fluxCurve((f + fuelData.selfRate) * fuelData.depletionCurve(d), fuelData.reactivity))
+       level(newLevel)
+       coroutine.yield(newLevel)
+     end
+    end
+  )
+
+  rodReaderExecuted, result, result2, result3, result4, result5, result6 = coroutine.resume(rodReader)
+
+  if not rodReaderExecuted then
+    SCRAM("Rod data polling unable to execute - " .. result)
+  elseif result2 and result3 >= maxTemp then 
+    SCRAM("MAXIMUM PERMISSIBLE CORE TEMPERATURE EXCEEDED IN " .. result .. " - " .. result3)
+  elseif result2 and result4 >= maxColumnTemp then
+    SCRAM("MAXIMUM PERMISSIBLE COLUMN TEMPERATURE EXCEEDED IN " .. result .. " - " .. result4)
+  else
+    -- do stats handoff here
+  end
+
+  while not scrammed and coroutine.status(rodReader) ~= "dead" do
+    newLevel = coroutine.resume(rodController, 290, result6)
+    print(newLevel)
+    rodReaderExecuted, result, result2, result3, result4, result5, result6 = coroutine.resume(rodReader)
+  end
+end
+
+function SCRAM(msg)
+  console.pressAZ5()
+  scrammed = true
+  print("-- REACTOR EMERGENCY SHUTDOWN INITIATED --")
+  print(msg)
+end
+      

@@ -37,13 +37,13 @@ local function createFuel(name, maxHeat, fluxCurve, depletionCurve, selfRate, re
   fuelData.yield = yield
     -- Takes the fuel depletion and desired flux as an argument. Returns the average control rod extraction 
     --  necessary (in a 4 reflector setup) to produce the passed flux.
-  function fuelData.calculate(d, f)
-    return f / (4 * fuelData.fluxCurve((f + fuelData.selfRate) * fuelData.depletionCurve(d)))
-  end
+  --function fuelData.calculate(d, f)
+    -- return f / (4 * fuelData.fluxCurve((f + fuelData.selfRate) * fuelData.depletionCurve(d), fuelData.reactivity))
+  --end
   
   fuel.types[name] = fuelData
 end
 
-createFuel("flashlead", 2050.0, flux.arch, depletion.linear, 50, 40)
+createFuel("flashlead", 2050.0, flux.arch, depletion.linear, 50, 40, 2500000)
 
 return fuel
