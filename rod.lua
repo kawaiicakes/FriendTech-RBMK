@@ -1,6 +1,8 @@
 local component = require("component")
 local fuel = require("fuel")
 local prompter = require("prompter")
+  -- adjust as needed. full program won't need this scuffed way of doing it lol
+local fluxCap = 244.0
 
 local console = component.rbmk_console
 -- local crane = component.rbmk_crane
@@ -109,8 +111,6 @@ function localCoordsToLocation(x, z)
   return abLookup[x] .. z
 end
 
-pollControlRods()
-
   -- Ad-hoc implementation here and below just so we can get the reactor online, WE NEED POWER NOW
 
 print("Initiating automatic control rod protocols")
@@ -128,7 +128,7 @@ function executeMainLoop()
         locationDep = ""
         highestColTemp = 20
         highestTemp = 20
-        lowestDepletion = 0
+        lowestDepletion = 100
 
         for k1, v1 in pairs(fuelRods) do
           for k2, v2 in pairs(v1) do
@@ -155,38 +155,29 @@ function executeMainLoop()
           end
         end
 
-        coroutine.yield(locationColTemp, highestColTemp, locationTemp, highestTemp, locationDep, lowestDepletion)
+        coroutine.yield(locationColTemp, false, highestColTemp, locationTemp, highestTemp, locationDep, lowestDepletion)
       end
     end
   )
 
-  rodController = coroutine.create(
-    function(f, d)
-     while not scrammed do
-       fuelData = fuel.types.flashlead
-       newLevel = f / (4 * fuelData.fluxCurve((f + fuelData.selfRate) * fuelData.depletionCurve(d), fuelData.reactivity))
-       level(newLevel)
-       coroutine.yield(newLevel)
-     end
-    end
-  )
-
-  rodReaderExecuted, result, result2, result3, result4, result5, result6 = coroutine.resume(rodReader)
-
-  if not rodReaderExecuted then
-    SCRAM("Rod data polling unable to execute - " .. result)
-  elseif result2 and result3 >= maxTemp then 
-    SCRAM("MAXIMUM PERMISSIBLE CORE TEMPERATURE EXCEEDED IN " .. result .. " - " .. result3)
-  elseif result2 and result4 >= maxColumnTemp then
-    SCRAM("MAXIMUM PERMISSIBLE COLUMN TEMPERATURE EXCEEDED IN " .. result .. " - " .. result4)
-  else
-    -- do stats handoff here
-  end
-
   while not scrammed and coroutine.status(rodReader) ~= "dead" do
-    newLevel = coroutine.resume(rodController, 290, result6)
-    print(newLevel)
-    rodReaderExecuted, result, result2, result3, result4, result5, result6 = coroutine.resume(rodReader)
+    rodReaderExecuted, result, result2, result3, result4, result5, result6, result7 = coroutine.resume(rodReader)
+
+    if not rodReaderExecuted then
+      SCRAM("Rod data polling unable to execute - " .. result)
+    elseif result2 and result3 >= maxTemp then 
+      SCRAM("MAXIMUM PERMISSIBLE CORE TEMPERATURE EXCEEDED IN " .. result .. " - " .. result3)
+    elseif result2 and result4 >= maxColumnTemp then
+      SCRAM("MAXIMUM PERMISSIBLE COLUMN TEMPERATURE EXCEEDED IN " .. result .. " - " .. result4)
+    else
+      -- do stats handoff here
+      x = (fluxCap + 50) * result7
+      newLevel = fluxCap / (4 * ((x - (x^2 / 10000)) / 100 * 40))
+      level(newLevel)
+      print(newLevel)
+    end
+
+    os.sleep(0.05)
   end
 end
 
@@ -197,3 +188,5 @@ function SCRAM(msg)
   print(msg)
 end
       
+pollControlRods()
+executeMainLoop()
